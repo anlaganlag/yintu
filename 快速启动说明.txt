@@ -1,0 +1,51 @@
+银途工厂管理系统 MVP - 快速启动说明
+
+方法1: 使用Docker (推荐)
+===============================
+1. 确保已安装Docker Desktop
+2. 在项目根目录打开命令行
+3. 运行: docker-compose up -d
+4. 访问: http://localhost:3000
+
+方法2: 本地启动
+===============================
+第一步: 启动后端
+1. 双击运行 start-backend.bat
+2. 等待安装依赖和启动完成
+3. 看到 "Uvicorn running" 表示后端启动成功
+
+第二步: 启动前端 (保持后端窗口打开)
+1. 双击运行 start-frontend.bat 
+2. 等待安装依赖和启动完成
+3. 自动打开浏览器访问 http://localhost:3000
+
+方法3: 手动启动
+===============================
+后端启动:
+cd D:\factory-yintu\backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+
+前端启动 (新窗口):
+cd D:\factory-yintu\frontend
+npm install
+npm start
+
+访问地址:
+===============================
+前端界面: http://localhost:3000
+后端API文档: http://localhost:8000/docs
+
+故障排除:
+===============================
+1. 端口被占用: 关闭占用8000或3000端口的程序
+2. Python未安装: 下载安装Python 3.9+
+3. Node.js未安装: 下载安装Node.js 16+
+4. 网络问题: 检查防火墙设置
+
+功能测试:
+===============================
+1. 库龄分析: 上传Excel文件查看库龄分布
+2. BOM匹配: 上传呆滞料和BOM文件进行匹配
+3. 生产看板: 查看订单进度和生产状态
+4. 成本分析: 录入实际成本查看差异

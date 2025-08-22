@@ -1,0 +1,71 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ant-layout-header {
+  background: #001529 !important;
+}
+
+.ant-menu-item-selected {
+  background-color: #1890ff !important;
+}
+
+.status-tag {
+  margin-bottom: 8px;
+}
+
+.kanban-card {
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cost-variance-positive {
+  color: #cf1322;
+}
+
+.cost-variance-negative {
+  color: #3f8600;
+}
+
+.aging-critical {
+  background-color: #fff2f0;
+  border-left: 4px solid #ff4d4f;
+}
+
+.aging-warning {
+  background-color: #fffbe6;
+  border-left: 4px solid #faad14;
+}
+
+.aging-normal {
+  border-left: 4px solid #52c41a;
+}

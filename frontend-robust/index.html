@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>银途工厂管理系统</title>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: #f0f2f5;
+        }
+        .header {
+            background: #001529;
+            color: white;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            height: 64px;
+            box-shadow: 0 1px 4px rgba(0,21,41,.08);
+        }
+        .header-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-left: 12px;
+        }
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 64px);
+        }
+        .sidebar {
+            width: 200px;
+            background: white;
+            border-right: 1px solid #f0f0f0;
+        }
+        .menu {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .menu-item {
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            display: flex;
+            align-items: center;
+        }
+        .menu-item:hover {
+            background-color: #f5f5f5;
+        }
+        .menu-item.active {
+            background-color: #e6f7ff;
+            border-left-color: #1890ff;
+            color: #1890ff;
+        }
+        .menu-icon {
+            margin-right: 12px;
+            font-size: 16px;
+        }
+        .content {
+            flex: 1;
+            padding: 24px;
+            background: #f0f2f5;
+        }
+        .content-area {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+        .stat-title {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            color: #262626;
+            font-size: 24px;
+            font-weight: 500;
+        }
+        .btn {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0 8px;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: #40a9ff;
+        }
+        .btn-secondary {
+            background: white;
+            color: #1890ff;
+            border: 1px solid #d9d9d9;
+        }
+        .btn-secondary:hover {
+            border-color: #1890ff;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .table th {
+            background: #fafafa;
+            font-weight: 600;
+        }
+        .table tr:hover {
+            background: #fafafa;
+        }
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1;
+        }
+        .tag-green { background: #f6ffed; color: #52c41a; border: 1px solid #b7eb8f; }
+        .tag-orange { background: #fff7e6; color: #faad14; border: 1px solid #ffd591; }
+        .tag-red { background: #fff2f0; color: #ff4d4f; border: 1px solid #ffb3b3; }
+        .tag-blue { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #1890ff;
+            transition: width 0.3s;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .error {
+            background: #fff2f0;
+            border: 1px solid #ffb3b3;
+            border-radius: 6px;
+            padding: 16px;
+            color: #cf1322;
+            margin: 16px 0;
+        }
+        .success {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            border-radius: 6px;
+            padding: 16px;
+            color: #52c41a;
+            margin: 16px 0;
+        }
+        .kanban-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .kanban-column {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 300px;
+        }
+        .kanban-title {
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+        .kanban-badge {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .kanban-card {
+            background: white;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .kanban-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="header">
+            <span>📊</span>
+            <span class="header-title">银途工厂管理系统</span>
+        </div>
+        <div class="layout">
+            <div class="sidebar">
+                <ul class="menu">
+                    <li class="menu-item active" onclick="showPage('aging')">
+                        <span class="menu-icon">📦</span>
+                        库龄分析
+                    </li>
+                    <li class="menu-item" onclick="showPage('bom')">
+                        <span class="menu-icon">🔗</span>
+                        BOM匹配
+                    </li>
+                    <li class="menu-item" onclick="showPage('production')">
+                        <span class="menu-icon">📋</span>
+                        生产看板
+                    </li>
+                    <li class="menu-item" onclick="showPage('cost')">
+                        <span class="menu-icon">💰</span>
+                        成本分析
+                    </li>
+                </ul>
+            </div>
+            <div class="content">
+                <div class="content-area" id="content-area">
+                    <!-- 动态内容区域 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局状态管理
+        const state = {
+            currentPage: 'aging',
+            loading: false,
+            data: {
+                inventory: [
+                    { id: 1, code: 'RM001', name: '原材料A', quantity: 1000, value: 50000, days: 120, status: '呆滞', warehouse: 'SP01', action: '生产成品' },
+                    { id: 2, code: 'RM002', name: '原材料B', quantity: 500, value: 30000, days: 200, status: '严重呆滞', warehouse: 'SP02', action: '清理销毁' },
+                    { id: 3, code: 'RM003', name: '原材料C', quantity: 2000, value: 40000, days: 45, status: '关注', warehouse: 'SP01', action: '' }
+                ],
+                orders: [
+                    { id: 'PO001', product: '成品A', total: 100, completed: 65, status: 'in_progress', deadline: '2025-01-15', priority: 'high' },
+                    { id: 'PO002', product: '成品B', total: 50, completed: 20, status: 'in_progress', deadline: '2025-01-20', priority: 'medium' },
+                    { id: 'PO003', product: '成品C', total: 75, completed: 0, status: 'pending', deadline: '2025-01-25', priority: 'low' },
+                    { id: 'PO004', product: '成品D', total: 30, completed: 30, status: 'completed', deadline: '2025-01-10', priority: 'high' }
+                ]
+            }
+        };
+
+        // 工具函数
+        function formatCurrency(value) {
+            return '¥' + value.toLocaleString();
+        }
+
+        function getStatusTag(status) {
+            const statusMap = {
+                '正常': 'tag-green',
+                '关注': 'tag-orange', 
+                '呆滞': 'tag-red',
+                '严重呆滞': 'tag-red'
+            };
+            return `<span class="tag ${statusMap[status] || ''}">${status}</span>`;
+        }
+
+        function getActionTag(action) {
+            if (action === '生产成品') return '<span class="tag tag-blue">生产成品</span>';
+            if (action === '清理销毁') return '<span class="tag tag-orange">清理销毁</span>';
+            return action;
+        }
+
+        function showMessage(text, type = 'success') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = text;
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '80px';
+            messageDiv.style.right = '20px';
+            messageDiv.style.zIndex = '1000';
+            messageDiv.style.minWidth = '300px';
+            
+            document.body.appendChild(messageDiv);
+            setTimeout(() => {
+                document.body.removeChild(messageDiv);
+            }, 3000);
+        }
+
+        // 页面切换
+        function showPage(page) {
+            // 更新菜单状态
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.menu-item').classList.add('active');
+
+            state.currentPage = page;
+            renderCurrentPage();
+        }
+
+        // 渲染当前页面
+        function renderCurrentPage() {
+            const contentArea = document.getElementById('content-area');
+            
+            switch(state.currentPage) {
+                case 'aging':
+                    contentArea.innerHTML = renderAgingAnalysis();
+                    break;
+                case 'bom':
+                    contentArea.innerHTML = renderBOMMatching();
+                    break;
+                case 'production':
+                    contentArea.innerHTML = renderProductionBoard();
+                    break;
+                case 'cost':
+                    contentArea.innerHTML = renderCostAnalysis();
+                    break;
+            }
+        }
+
+        // 渲染库龄分析页面
+        function renderAgingAnalysis() {
+            const stats = {
+                total: state.data.inventory.length,
+                normal: state.data.inventory.filter(item => item.status === '正常').length,
+                stagnant: state.data.inventory.filter(item => item.status === '呆滞').length,
+                critical: state.data.inventory.filter(item => item.status === '严重呆滞').length
+            };
+
+            return `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">总物料数</div>
+                        <div class="stat-value">${stats.total}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">正常库存</div>
+                        <div class="stat-value" style="color: #52c41a">${stats.normal}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">呆滞物料</div>
+                        <div class="stat-value" style="color: #faad14">${stats.stagnant}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">严重呆滞</div>
+                        <div class="stat-value" style="color: #ff4d4f">${stats.critical}</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <button class="btn btn-secondary" onclick="handleFileUpload('inventory')">📤 上传库存数据</button>
+                    <button class="btn" onclick="handleExport('aging')">📥 导出报表</button>
+                </div>
+
+                <div style="background: #fafafa; padding: 20px; border-radius: 8px; margin: 16px 0; text-align: center;">
+                    <h4>库龄分布图表区域</h4>
+                    <p>这里将显示库龄分布的柱状图和饼图</p>
+                </div>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>物料编号</th>
+                            <th>物料名称</th>
+                            <th>库存数量</th>
+                            <th>库存价值</th>
+                            <th>库龄(天)</th>
+                            <th>库龄状态</th>
+                            <th>仓库</th>
+                            <th>建议操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${state.data.inventory.map(item => `
+                            <tr>
+                                <td><strong>${item.code}</strong></td>
+                                <td>${item.name}</td>
+                                <td>${item.quantity}</td>
+                                <td>${formatCurrency(item.value)}</td>
+                                <td>${item.days}</td>
+                                <td>${getStatusTag(item.status)}</td>
+                                <td>${item.warehouse}</td>
+                                <td>${getActionTag(item.action)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // 渲染BOM匹配页面
+        function renderBOMMatching() {
+            return `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">呆滞料匹配率</div>
+                        <div class="stat-value" style="color: #52c41a">75%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">可清理价值</div>
+                        <div class="stat-value" style="color: #1890ff">¥23万</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">预期利润率</div>
+                        <div class="stat-value" style="color: #faad14">85%</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <button class="btn btn-secondary" onclick="handleFileUpload('stagnant')">📤 上传呆滞料清单</button>
+                    <button class="btn btn-secondary" onclick="handleFileUpload('bom')">📤 上传BOM数据</button>
+                    <button class="btn" onclick="handleBOMMatch()">⚡ 开始匹配</button>
+                </div>
+
+                <div style="background: #f6ffed; border: 1px solid #b7eb8f; padding: 16px; border-radius: 6px; margin: 16px 0;">
+                    <h4 style="color: #52c41a; margin: 0 0 8px 0;">💡 匹配建议</h4>
+                    <ul style="margin: 0; color: #52c41a;">
+                        <li>生产100件成品A，可消耗80%呆滞料，预计利润12万元</li>
+                        <li>同时生产成品A和B，需少量采购，但可完全清理呆滞库存</li>
+                    </ul>
+                </div>
+
+                <div style="background: #fafafa; padding: 20px; border-radius: 8px; text-align: center;">
+                    <h4>BOM匹配结果表格</h4>
+                    <p>这里将显示呆滞料与成品的匹配分析结果</p>
+                    <p>包括：优先级、成品信息、消耗呆滞料、可生产数量、预估利润等</p>
+                </div>
+            `;
+        }
+
+        // 渲染生产看板页面  
+        function renderProductionBoard() {
+            const orders = state.data.orders;
+            const pending = orders.filter(o => o.status === 'pending');
+            const inProgress = orders.filter(o => o.status === 'in_progress');
+            const completed = orders.filter(o => o.status === 'completed');
+
+            return `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">今日计划</div>
+                        <div class="stat-value">${orders.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">生产中</div>
+                        <div class="stat-value" style="color: #1890ff">${inProgress.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">已完成</div>
+                        <div class="stat-value" style="color: #52c41a">${completed.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">完成率</div>
+                        <div class="stat-value" style="color: #faad14">65%</div>
+                    </div>
+                </div>
+
+                <div class="kanban-grid">
+                    <div class="kanban-column">
+                        <div class="kanban-title">
+                            <span class="kanban-badge" style="background: #d9d9d9;"></span>
+                            待生产 (${pending.length})
+                        </div>
+                        ${pending.map(order => `
+                            <div class="kanban-card">
+                                <div><strong>${order.id}</strong> - ${order.product}</div>
+                                <div style="margin: 8px 0;">数量: ${order.completed}/${order.total}</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${(order.completed/order.total*100)}%"></div>
+                                </div>
+                                <div style="font-size: 12px; color: #666;">截止: ${order.deadline}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="kanban-column">
+                        <div class="kanban-title">
+                            <span class="kanban-badge" style="background: #faad14;"></span>
+                            备料中 (0)
+                        </div>
+                        <div style="text-align: center; color: #999; padding: 20px;">暂无订单</div>
+                    </div>
+                    
+                    <div class="kanban-column">
+                        <div class="kanban-title">
+                            <span class="kanban-badge" style="background: #1890ff;"></span>
+                            生产中 (${inProgress.length})
+                        </div>
+                        ${inProgress.map(order => `
+                            <div class="kanban-card">
+                                <div><strong>${order.id}</strong> - ${order.product}</div>
+                                <div style="margin: 8px 0;">数量: ${order.completed}/${order.total}</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${(order.completed/order.total*100)}%"></div>
+                                </div>
+                                <div style="font-size: 12px; color: #666;">截止: ${order.deadline}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="kanban-column">
+                        <div class="kanban-title">
+                            <span class="kanban-badge" style="background: #52c41a;"></span>
+                            已完成 (${completed.length})
+                        </div>
+                        ${completed.map(order => `
+                            <div class="kanban-card">
+                                <div><strong>${order.id}</strong> - ${order.product}</div>
+                                <div style="margin: 8px 0;">数量: ${order.completed}/${order.total}</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 100%; background: #52c41a;"></div>
+                                </div>
+                                <div style="font-size: 12px; color: #666;">截止: ${order.deadline}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div style="background: white; padding: 20px; border-radius: 8px; margin-top: 16px;">
+                    <h4>生产进度时间线</h4>
+                    <div style="border-left: 2px solid #f0f0f0; padding-left: 20px;">
+                        <div style="margin-bottom: 16px; position: relative;">
+                            <div style="position: absolute; left: -27px; width: 8px; height: 8px; background: #52c41a; border-radius: 50%;"></div>
+                            <div style="font-weight: 500;">08:00 - PO004 成品D 生产完成</div>
+                        </div>
+                        <div style="margin-bottom: 16px; position: relative;">
+                            <div style="position: absolute; left: -27px; width: 8px; height: 8px; background: #1890ff; border-radius: 50%;"></div>
+                            <div style="font-weight: 500;">10:30 - PO001 成品A 开始生产</div>
+                        </div>
+                        <div style="margin-bottom: 16px; position: relative;">
+                            <div style="position: absolute; left: -27px; width: 8px; height: 8px; background: #1890ff; border-radius: 50%;"></div>
+                            <div style="font-weight: 500;">14:00 - PO002 成品B 开始生产</div>
+                        </div>
+                        <div style="position: relative;">
+                            <div style="position: absolute; left: -27px; width: 8px; height: 8px; background: #d9d9d9; border-radius: 50%;"></div>
+                            <div style="font-weight: 500; color: #999;">16:00 - PO003 成品C 计划生产</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染成本分析页面
+        function renderCostAnalysis() {
+            return `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">总产品数</div>
+                        <div class="stat-value">2</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">平均差异率</div>
+                        <div class="stat-value" style="color: #faad14">7.75%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">超差产品</div>
+                        <div class="stat-value" style="color: #ff4d4f">1</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">成本控制率</div>
+                        <div class="stat-value" style="color: #52c41a">50%</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0;">
+                    <div style="background: #fafafa; padding: 20px; border-radius: 8px;">
+                        <h4>成本对比分析</h4>
+                        <p style="text-align: center; color: #666; padding: 40px 0;">成本对比图表区域</p>
+                    </div>
+                    <div style="background: #fafafa; padding: 20px; border-radius: 8px;">
+                        <h4>整体成本结构</h4>
+                        <p style="text-align: center; color: #666; padding: 40px 0;">成本结构饼图区域</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <button class="btn" onclick="showCostModal()">➕ 录入实际成本</button>
+                </div>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>产品编号</th>
+                            <th>产品名称</th>
+                            <th>BOM材料成本</th>
+                            <th>实际材料成本</th>
+                            <th>BOM人工成本</th>
+                            <th>实际人工成本</th>
+                            <th>成本差异</th>
+                            <th>差异率</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>FG001</strong></td>
+                            <td>成品A</td>
+                            <td>¥80</td>
+                            <td>¥85</td>
+                            <td>¥30</td>
+                            <td>¥35</td>
+                            <td style="color: #ff4d4f">+¥15</td>
+                            <td style="color: #ff4d4f">+11.5%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>FG002</strong></td>
+                            <td>成品B</td>
+                            <td>¥60</td>
+                            <td>¥58</td>
+                            <td>¥25</td>
+                            <td>¥28</td>
+                            <td style="color: #52c41a">+¥4</td>
+                            <td style="color: #52c41a">+4.0%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // 事件处理函数
+        function handleFileUpload(type) {
+            showMessage(`${type === 'inventory' ? '库存数据' : type === 'stagnant' ? '呆滞料清单' : 'BOM数据'}上传功能演示`);
+        }
+
+        function handleExport(type) {
+            showMessage(`${type === 'aging' ? '库龄分析' : '数据'}报表导出成功`);
+        }
+
+        function handleBOMMatch() {
+            showMessage('正在进行BOM匹配分析...');
+            setTimeout(() => {
+                showMessage('BOM匹配完成！找到3个可行方案');
+            }, 2000);
+        }
+
+        function showCostModal() {
+            showMessage('成本录入模态框功能演示');
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCurrentPage();
+        });
+    </script>
+</body>
+</html>

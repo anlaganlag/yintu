@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>银途工厂管理系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5.11.5/dist/reset.css">
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/antd@5.11.5/dist/antd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ant-design/icons@5.2.6/dist/index.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.2/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        .ant-layout-header { background: #001529 !important; }
+        .aging-critical { background-color: #fff2f0; border-left: 4px solid #ff4d4f; }
+        .aging-warning { background-color: #fffbe6; border-left: 4px solid #faad14; }
+        .aging-normal { border-left: 4px solid #52c41a; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        // 检查依赖是否正确加载
+        function checkDependencies() {
+            const missing = [];
+            if (typeof React === 'undefined') missing.push('React');
+            if (typeof ReactDOM === 'undefined') missing.push('ReactDOM');
+            if (typeof antd === 'undefined') missing.push('Ant Design');
+            if (typeof icons === 'undefined') missing.push('@ant-design/icons');
+            
+            if (missing.length > 0) {
+                document.getElementById('root').innerHTML = 
+                    '<div style="padding: 20px; color: red; font-size: 16px;">' +
+                    '<h3>依赖加载失败</h3>' +
+                    '<p>以下依赖未正确加载：' + missing.join(', ') + '</p>' +
+                    '<p>请检查网络连接或CDN服务</p>' +
+                    '</div>';
+                return false;
+            }
+            return true;
+        }
+
+        // 等待依赖加载完成
+        function initApp() {
+            if (!checkDependencies()) return;
+
+            try {
+                const { useState, useEffect } = React;
+                const { Layout, Menu, Card, Table, Button, Upload, message, Tag, Row, Col, Statistic, Space, Progress, List, Timeline, Badge, Modal, Form, Input } = antd;
+                const { DashboardOutlined, DatabaseOutlined, PartitionOutlined, DollarOutlined, ProjectOutlined, UploadOutlined, DownloadOutlined, WarningOutlined, ThunderboltOutlined, ShoppingCartOutlined, ClockCircleOutlined, CheckCircleOutlined, SyncOutlined, ExclamationCircleOutlined, PlusOutlined, EditOutlined } = icons;
+        const { Header, Sider, Content } = Layout;
+
+        // 主应用组件
+        const App = () => {
+            const [selectedKey, setSelectedKey] = useState('1');
+
+            const menuItems = [
+                { key: '1', icon: React.createElement(DatabaseOutlined), label: '库龄分析' },
+                { key: '2', icon: React.createElement(PartitionOutlined), label: 'BOM匹配' },
+                { key: '3', icon: React.createElement(ProjectOutlined), label: '生产看板' },
+                { key: '4', icon: React.createElement(DollarOutlined), label: '成本分析' },
+            ];
+
+            const renderContent = () => {
+                switch (selectedKey) {
+                    case '1': return React.createElement(AgingAnalysis);
+                    case '2': return React.createElement(BOMMatching);
+                    case '3': return React.createElement(ProductionBoard);
+                    case '4': return React.createElement(CostAnalysis);
+                    default: return React.createElement(AgingAnalysis);
+                }
+            };
+
+            return React.createElement(Layout, { style: { minHeight: '100vh' } },
+                React.createElement(Header, { style: { display: 'flex', alignItems: 'center' } },
+                    React.createElement('div', { style: { color: 'white', fontSize: '20px', fontWeight: 'bold' } },
+                        React.createElement(DashboardOutlined, { style: { marginRight: '10px' } }),
+                        '银途工厂管理系统'
+                    )
+                ),
+                React.createElement(Layout, null,
+                    React.createElement(Sider, { width: 200, style: { background: '#fff' } },
+                        React.createElement(Menu, {
+                            mode: 'inline',
+                            selectedKeys: [selectedKey],
+                            style: { height: '100%', borderRight: 0 },
+                            items: menuItems,
+                            onClick: (e) => setSelectedKey(e.key)
+                        })
+                    ),
+                    React.createElement(Layout, { style: { padding: '24px' } },
+                        React.createElement(Content, {
+                            style: { padding: 24, margin: 0, minHeight: 280, background: '#fff', borderRadius: '8px' }
+                        }, renderContent())
+                    )
+                )
+            );
+        };
+
+        // 库龄分析组件
+        const AgingAnalysis = () => {
+            const [loading, setLoading] = useState(false);
+            const [tableData, setTableData] = useState([
+                { key: '1', item_code: 'RM001', item_name: '原材料A', quantity: 1000, value: 50000, aging_days: 120, aging_status: '呆滞', warehouse: 'SP01', suggested_action: '生产成品' },
+                { key: '2', item_code: 'RM002', item_name: '原材料B', quantity: 500, value: 30000, aging_days: 200, aging_status: '严重呆滞', warehouse: 'SP02', suggested_action: '清理销毁' },
+                { key: '3', item_code: 'RM003', item_name: '原材料C', quantity: 2000, value: 40000, aging_days: 45, aging_status: '关注', warehouse: 'SP01', suggested_action: '' }
+            ]);
+
+            const columns = [
+                { title: '物料编号', dataIndex: 'item_code', key: 'item_code', fixed: 'left', width: 120 },
+                { title: '物料名称', dataIndex: 'item_name', key: 'item_name', width: 200 },
+                { title: '库存数量', dataIndex: 'quantity', key: 'quantity', width: 100, align: 'right' },
+                { title: '库存价值', dataIndex: 'value', key: 'value', width: 120, align: 'right', render: (val) => `¥${val?.toLocaleString() || 0}` },
+                { title: '库龄(天)', dataIndex: 'aging_days', key: 'aging_days', width: 100, align: 'center' },
+                { title: '库龄状态', dataIndex: 'aging_status', key: 'aging_status', width: 100, render: (status) => {
+                    const colorMap = { '正常': 'green', '关注': 'orange', '呆滞': 'red', '严重呆滞': 'red' };
+                    return React.createElement(Tag, { color: colorMap[status] || 'default' }, status);
+                }},
+                { title: '仓库', dataIndex: 'warehouse', key: 'warehouse', width: 100 },
+                { title: '建议操作', dataIndex: 'suggested_action', key: 'suggested_action', width: 120, render: (action) => {
+                    if (action === '生产成品') return React.createElement(Tag, { color: 'blue' }, '生产成品');
+                    if (action === '清理销毁') return React.createElement(Tag, { color: 'volcano' }, '清理销毁');
+                    return action;
+                }}
+            ];
+
+            const handleUpload = () => {
+                setLoading(true);
+                message.success('文件上传成功');
+                setTimeout(() => { setLoading(false); message.success('库龄分析完成'); }, 2000);
+            };
+
+            const handleExport = () => {
+                message.success('报表导出成功');
+            };
+
+            return React.createElement('div', null,
+                React.createElement(Row, { gutter: 16, style: { marginBottom: 24 } },
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, null, React.createElement(Statistic, { title: '总物料数', value: 3 }))),
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, null, React.createElement(Statistic, { title: '正常库存', value: 0, valueStyle: { color: '#3f8600' } }))),
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, null, React.createElement(Statistic, { title: '呆滞物料', value: 1, valueStyle: { color: '#cf1322' }, prefix: React.createElement(WarningOutlined) }))),
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, null, React.createElement(Statistic, { title: '严重呆滞', value: 1, valueStyle: { color: '#cf1322' }, prefix: React.createElement(WarningOutlined) })))
+                ),
+                React.createElement(Card, {
+                    title: '库龄分析',
+                    extra: React.createElement(Space, null,
+                        React.createElement(Button, { icon: React.createElement(UploadOutlined), onClick: handleUpload }, '上传库存数据'),
+                        React.createElement(Button, { type: 'primary', icon: React.createElement(DownloadOutlined), onClick: handleExport }, '导出报表')
+                    )
+                },
+                    React.createElement('div', { style: { height: 300, marginBottom: 24 } }, '库龄分布图表区域'),
+                    React.createElement(Table, {
+                        columns: columns,
+                        dataSource: tableData,
+                        loading: loading,
+                        scroll: { x: 1200 },
+                        pagination: { pageSize: 10, showSizeChanger: true, showTotal: (total) => `共 ${total} 条记录` }
+                    })
+                )
+            );
+        };
+
+        // BOM匹配组件
+        const BOMMatching = () => {
+            const [loading, setLoading] = useState(false);
+            const [matchResults, setMatchResults] = useState([]);
+
+            const handleMatch = () => {
+                setLoading(true);
+                message.loading('正在进行BOM匹配分析...');
+                setTimeout(() => {
+                    setLoading(false);
+                    const mockResults = [
+                        { key: '1', priority: 1, product_code: 'FG001', product_name: '成品A', stagnant_consumed: ['RM001', 'RM003'], stagnant_value_cleared: 80000, producible_quantity: 100, profit_estimate: 120000, missing_materials: [] },
+                        { key: '2', priority: 2, product_code: 'FG002', product_name: '成品B', stagnant_consumed: ['RM002'], stagnant_value_cleared: 30000, producible_quantity: 50, profit_estimate: 45000, missing_materials: ['RM010'] }
+                    ];
+                    setMatchResults(mockResults);
+                    message.success('BOM匹配完成！找到2个可行方案');
+                }, 2000);
+            };
+
+            return React.createElement('div', null,
+                React.createElement(Row, { gutter: 16, style: { marginBottom: 24 } },
+                    React.createElement(Col, { span: 8 }, React.createElement(Card, null, React.createElement(Progress, { type: 'circle', percent: 75, format: () => '75%', strokeColor: '#52c41a' }), React.createElement('div', { style: { textAlign: 'center', marginTop: 16 } }, React.createElement('h4', null, '呆滞料匹配率')))),
+                    React.createElement(Col, { span: 8 }, React.createElement(Card, null, React.createElement(Progress, { type: 'circle', percent: 60, format: () => '¥23万', strokeColor: '#1890ff' }), React.createElement('div', { style: { textAlign: 'center', marginTop: 16 } }, React.createElement('h4', null, '可清理价值')))),
+                    React.createElement(Col, { span: 8 }, React.createElement(Card, null, React.createElement(Progress, { type: 'circle', percent: 85, format: () => '85%', strokeColor: '#faad14' }), React.createElement('div', { style: { textAlign: 'center', marginTop: 16 } }, React.createElement('h4', null, '预期利润率'))))
+                ),
+                React.createElement(Card, {
+                    title: 'BOM智能匹配',
+                    extra: React.createElement(Space, null,
+                        React.createElement(Button, { icon: React.createElement(UploadOutlined) }, '上传呆滞料清单'),
+                        React.createElement(Button, { icon: React.createElement(UploadOutlined) }, '上传BOM数据'),
+                        React.createElement(Button, { type: 'primary', icon: React.createElement(ThunderboltOutlined), onClick: handleMatch }, '开始匹配')
+                    )
+                },
+                    React.createElement('div', { style: { textAlign: 'center', padding: '40px 0' } },
+                        loading ? React.createElement('div', null, '正在匹配分析...') : 
+                        matchResults.length > 0 ? React.createElement('div', null, `找到 ${matchResults.length} 个匹配方案`) :
+                        '请上传数据文件并开始匹配分析'
+                    )
+                )
+            );
+        };
+
+        // 生产看板组件
+        const ProductionBoard = () => {
+            return React.createElement('div', null,
+                React.createElement(Row, { gutter: 16, style: { marginBottom: 24 } },
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, null, React.createElement(Statistic, { title: '今日计划', value: 4, suffix: '单' }))),
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, null, React.createElement(Statistic, { title: '生产中', value: 2, suffix: '单', valueStyle: { color: '#1890ff' } }))),
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, null, React.createElement(Statistic, { title: '已完成', value: 1, suffix: '单', valueStyle: { color: '#3f8600' } }))),
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, null, React.createElement(Statistic, { title: '完成率', value: 65, suffix: '%', valueStyle: { color: '#faad14' } })))
+                ),
+                React.createElement(Row, { gutter: 16, style: { marginBottom: 24 } },
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, { title: '待生产 (1)', bodyStyle: { padding: '12px' } }, React.createElement('div', { style: { padding: '8px', border: '1px solid #d9d9d9', borderRadius: '4px' } }, 'PO003 - 成品C', React.createElement('br'), '数量: 0/75', React.createElement(Progress, { percent: 0, size: 'small' }), React.createElement('div', { style: { marginTop: 8, fontSize: '12px' } }, '截止: 2025-01-25')))),
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, { title: '备料中 (0)', bodyStyle: { padding: '12px' } }, React.createElement('div', { style: { textAlign: 'center', padding: '20px', color: '#999' } }, '暂无订单'))),
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, { title: '生产中 (2)', bodyStyle: { padding: '12px' } }, React.createElement('div', { style: { marginBottom: 8 } }, React.createElement('div', { style: { padding: '8px', border: '1px solid #1890ff', borderRadius: '4px', marginBottom: 8 } }, 'PO001 - 成品A', React.createElement('br'), '数量: 65/100', React.createElement(Progress, { percent: 65, size: 'small' })), React.createElement('div', { style: { padding: '8px', border: '1px solid #1890ff', borderRadius: '4px' } }, 'PO002 - 成品B', React.createElement('br'), '数量: 20/50', React.createElement(Progress, { percent: 40, size: 'small' }))))),
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, { title: '已完成 (1)', bodyStyle: { padding: '12px' } }, React.createElement('div', { style: { padding: '8px', border: '1px solid #52c41a', borderRadius: '4px' } }, 'PO004 - 成品D', React.createElement('br'), '数量: 30/30', React.createElement(Progress, { percent: 100, size: 'small', strokeColor: '#52c41a' }))))
+                ),
+                React.createElement(Card, { title: '生产进度时间线' },
+                    React.createElement(Timeline, { mode: 'left' },
+                        React.createElement(Timeline.Item, { color: 'green' }, '08:00 - PO004 成品D 生产完成'),
+                        React.createElement(Timeline.Item, { color: 'blue' }, '10:30 - PO001 成品A 开始生产'),
+                        React.createElement(Timeline.Item, { color: 'blue' }, '14:00 - PO002 成品B 开始生产'),
+                        React.createElement(Timeline.Item, { color: 'gray' }, '16:00 - PO003 成品C 计划生产')
+                    )
+                )
+            );
+        };
+
+        // 成本分析组件
+        const CostAnalysis = () => {
+            const [isModalVisible, setIsModalVisible] = useState(false);
+            const [form] = Form.useForm();
+
+            const showModal = () => setIsModalVisible(true);
+            const handleOk = () => {
+                message.success('成本数据更新成功');
+                setIsModalVisible(false);
+            };
+
+            return React.createElement('div', null,
+                React.createElement(Row, { gutter: 16, style: { marginBottom: 24 } },
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, null, React.createElement(Statistic, { title: '总产品数', value: 2 }))),
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, null, React.createElement(Statistic, { title: '平均差异率', value: 7.75, suffix: '%', precision: 2, valueStyle: { color: '#faad14' } }))),
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, null, React.createElement(Statistic, { title: '超差产品', value: 1, valueStyle: { color: '#cf1322' } }))),
+                    React.createElement(Col, { span: 6 }, React.createElement(Card, null, React.createElement(Statistic, { title: '成本控制率', value: 50, suffix: '%', valueStyle: { color: '#3f8600' } })))
+                ),
+                React.createElement(Row, { gutter: 16, style: { marginBottom: 24 } },
+                    React.createElement(Col, { span: 12 }, React.createElement(Card, { title: '成本对比分析' }, React.createElement('div', { style: { height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa' } }, '成本对比图表区域'))),
+                    React.createElement(Col, { span: 12 }, React.createElement(Card, { title: '整体成本结构' }, React.createElement('div', { style: { height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa' } }, '成本结构图表区域')))
+                ),
+                React.createElement(Card, {
+                    title: '成本差异分析',
+                    extra: React.createElement(Button, { type: 'primary', icon: React.createElement(PlusOutlined), onClick: showModal }, '录入实际成本')
+                },
+                    React.createElement('div', { style: { textAlign: 'center', padding: '40px 0' } }, '成本差异数据表格区域')
+                ),
+                React.createElement(Modal, {
+                    title: '录入/编辑实际成本',
+                    open: isModalVisible,
+                    onOk: handleOk,
+                    onCancel: () => setIsModalVisible(false),
+                    width: 600
+                },
+                    React.createElement(Form, { form: form, layout: 'vertical' },
+                        React.createElement(Row, { gutter: 16 },
+                            React.createElement(Col, { span: 12 }, React.createElement(Form.Item, { name: 'product_code', label: '产品编号' }, React.createElement(Input, { placeholder: '请输入产品编号' }))),
+                            React.createElement(Col, { span: 12 }, React.createElement(Form.Item, { name: 'product_name', label: '产品名称' }, React.createElement(Input, { placeholder: '请输入产品名称' })))
+                        ),
+                        React.createElement(Row, { gutter: 16 },
+                            React.createElement(Col, { span: 8 }, React.createElement(Form.Item, { name: 'material_cost', label: '实际材料成本' }, React.createElement(Input, { prefix: '¥', type: 'number', placeholder: '0' }))),
+                            React.createElement(Col, { span: 8 }, React.createElement(Form.Item, { name: 'labor_cost', label: '实际人工成本' }, React.createElement(Input, { prefix: '¥', type: 'number', placeholder: '0' }))),
+                            React.createElement(Col, { span: 8 }, React.createElement(Form.Item, { name: 'overhead_cost', label: '实际制造费用' }, React.createElement(Input, { prefix: '¥', type: 'number', placeholder: '0' })))
+                        )
+                    )
+                )
+            );
+        };
+
+                // 渲染应用
+                ReactDOM.render(React.createElement(App), document.getElementById('root'));
+            } catch (error) {
+                document.getElementById('root').innerHTML = 
+                    '<div style="padding: 20px; color: red; font-size: 16px;">' +
+                    '<h3>应用启动失败</h3>' +
+                    '<p>错误信息：' + error.message + '</p>' +
+                    '<p>请刷新页面重试</p>' +
+                    '</div>';
+                console.error('App initialization error:', error);
+            }
+        }
+
+        // 等待所有依赖加载完成后初始化应用
+        window.addEventListener('load', function() {
+            setTimeout(initApp, 100); // 小延迟确保所有脚本加载完成
+        });
+    </script>
+</body>
+</html>
